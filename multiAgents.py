@@ -186,7 +186,8 @@ class MinimaxAgent(MultiAgentSearchAgent):
                     maxScore, bestAction = score, action
             return (maxScore, bestAction)
 
-
+        action = maxVal(gameState,0)[1]
+        return action
         return maxVal(gameState,0)[1]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -198,8 +199,43 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def abMax(state, depth,alpha = None,beta = None):
+            d = self.depth
+            if depth == d:
+                return (self.evaluationFunction(state), None)
+            depth += 1
+            legalMoves = [action for action in state.getLegalActions(0) if action != 'Stop']
+            maxScore = -sys.maxint
+            bestAction = None
+            for action in legalMoves:
+                newState = state.generateSuccessor(0, action)
+                score = abMin(newState, depth, 1,maxScore,beta)[0]
+                if score > maxScore:
+                    maxScore, bestAction = score, action
+            return (maxScore, bestAction)
+
+        def abMin(state, depth, adversary,alpha = None,beta = None):
+            d = self.depth
+            if depth == d:
+                return (self.evaluationFunction(state), None)
+            depth += 1
+            legalMoves = state.getLegalActions(adversary)
+            maxScore = sys.maxint
+            bestAction = None
+            for action in legalMoves:
+                newState = state.generateSuccessor(adversary, action)
+                if (adversary == state.getNumAgents() - 1):
+                    score = abMax(newState, depth,alpha,maxScore)[0]
+                else:
+                    score = abMin(state, adversary + 1, depth,alpha,maxScore)[0]
+                if score < maxScore:
+                    if score < alpha:
+                        return (maxScore, bestAction)
+                    maxScore, bestAction = score, action
+            return (maxScore, bestAction)
+
+        return abMax(gameState, 0)[1]
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
