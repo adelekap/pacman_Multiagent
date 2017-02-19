@@ -159,10 +159,14 @@ class MinimaxAgent(MultiAgentSearchAgent):
             depth += 1
             legalMoves = [action for action in state.getLegalActions(0) if action != 'Stop']
             maxScore = -sys.maxint
+            bestAction = ''
             for action in legalMoves:
                 newState = state.generateSuccessor(0,action)
+                prevScore = maxScore
                 maxScore = max(maxScore,minVal(newState, depth, 1))
-            return maxScore
+                if maxScore > prevScore:
+                    bestAction = action
+            return (maxScore,bestAction)
 
 
         def minVal(state,depth,adversary):
@@ -178,19 +182,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
                     maxScore = min(maxScore,maxVal(newState,depth))
                 else:
                     maxScore = min(maxScore,minVal(state, adversary + 1, depth-1))
-                return maxScore
+            return maxScore
 
-        pacmanActions = [act for act in gameState.getLegalActions(0) if act != 'Stop']
-        maxScore = -sys.maxint
-        bestAction = ''
-        for action in pacmanActions:
-            nextState = gameState.generateSuccessor(0,action)
-            prevScore = maxScore
-            maxScore= max(maxScore, minVal(nextState,0,1))
-            if maxScore > prevScore:
-                bestAction = action
-        return bestAction
-
+        move = maxVal(gameState,0)
+        return move[1]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
