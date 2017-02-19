@@ -154,41 +154,43 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         def maxVal(state,depth):
             d = self.depth
-            if depth == d:
-                return (self.evaluationFunction(state),None)
+            if state.isWin() or state.isLose() or depth == d:
+                return (self.evaluationFunction(state))
             depth += 1
             legalMoves = [action for action in state.getLegalActions(0) if action != 'Stop']
             maxScore = -sys.maxint
-            bestAction = None
             for action in legalMoves:
                 newState = state.generateSuccessor(0,action)
-                score = minVal(newState, depth, 1)[0]
-                if score > maxScore:
-                    maxScore, bestAction = score, action
-            return (maxScore, bestAction)
+                maxScore = max(maxScore,minVal(newState, depth, 1))
+            return maxScore
 
 
         def minVal(state,depth,adversary):
             d = self.depth
-            if depth == d:
-                return(self.evaluationFunction(state),None)
+            if state.isWin() or state.isLose() or depth == d:
+                return(self.evaluationFunction(state))
             depth += 1
             legalMoves = state.getLegalActions(adversary)
             maxScore = sys.maxint
-            bestAction = None
             for action in legalMoves:
                 newState = state.generateSuccessor(adversary,action)
                 if (adversary == state.getNumAgents() - 1):
-                    score = maxVal(newState,depth)[0]
+                    maxScore = min(maxScore,maxVal(newState,depth))
                 else:
-                    score = minVal(state, adversary + 1, depth)[0]
-                if score < maxScore:
-                    maxScore, bestAction = score, action
-            return (maxScore, bestAction)
+                    maxScore = min(maxScore,minVal(state, adversary + 1, depth-1))
+                return maxScore
 
-        action = maxVal(gameState,0)[1]
-        return action
-        return maxVal(gameState,0)[1]
+        pacmanActions = [act for act in gameState.getLegalActions(0) if act != 'Stop']
+        maxScore = -sys.maxint
+        bestAction = ''
+        for action in pacmanActions:
+            nextState = gameState.generateSuccessor(0,action)
+            prevScore = maxScore
+            maxScore= max(maxScore, minVal(nextState,0,1))
+            if maxScore > prevScore:
+                bestAction = action
+        return bestAction
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
