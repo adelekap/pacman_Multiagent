@@ -181,11 +181,13 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 if (adversary == state.getNumAgents() - 1):
                     maxScore = min(maxScore,maxVal(newState,depth))
                 else:
-                    maxScore = min(maxScore,minVal(state, adversary + 1, depth-1))
+                    maxScore = min(maxScore,minVal(state, adversary + 1, depth))
             return maxScore
 
         move = maxVal(gameState,0)
         return move[1]
+
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
