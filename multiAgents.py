@@ -178,10 +178,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
             maxScore = sys.maxint
             for action in legalMoves:
                 newState = state.generateSuccessor(adversary,action)
-                if (adversary == state.getNumAgents() - 1):
+                if adversary == state.getNumAgents() - 1:
                     maxScore = min(maxScore,maxVal(newState,depth))
                 else:
-                    maxScore = min(maxScore,minVal(state, adversary + 1, depth))
+                    maxScore = min(maxScore,minVal(newState, depth,adversary + 1))
             return maxScore
 
         move = maxVal(gameState,0)
@@ -199,42 +199,53 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
 
-        def abMax(state, depth,alpha = None,beta = None):
+        def abMax(state,depth,alpha,beta):
             d = self.depth
-            if depth == d:
-                return (self.evaluationFunction(state), None)
+            if state.isWin() or state.isLose() or depth == d:
+                return (self.evaluationFunction(state))
             depth += 1
             legalMoves = [action for action in state.getLegalActions(0) if action != 'Stop']
             maxScore = -sys.maxint
-            bestAction = None
             for action in legalMoves:
-                newState = state.generateSuccessor(0, action)
-                score = abMin(newState, depth, 1,maxScore,beta)[0]
-                if score > maxScore:
-                    maxScore, bestAction = score, action
-            return (maxScore, bestAction)
+                newState = state.generateSuccessor(0,action)
+                maxScore = max(maxScore,abMin(newState, depth, 1,alpha,beta))
+                if maxScore >= beta:
+                    return maxScore
+                alpha = max(alpha, maxScore)
+            return maxScore
 
-        def abMin(state, depth, adversary,alpha = None,beta = None):
+
+        def abMin(state,depth,adversary,alpha,beta):
             d = self.depth
-            if depth == d:
-                return (self.evaluationFunction(state), None)
+            if state.isWin() or state.isLose() or depth == d:
+                return(self.evaluationFunction(state))
             depth += 1
             legalMoves = state.getLegalActions(adversary)
             maxScore = sys.maxint
-            bestAction = None
             for action in legalMoves:
-                newState = state.generateSuccessor(adversary, action)
+                newState = state.generateSuccessor(adversary,action)
                 if (adversary == state.getNumAgents() - 1):
-                    score = abMax(newState, depth,alpha,maxScore)[0]
+                    maxScore = min(maxScore,abMax(newState,depth,alpha,beta))
                 else:
-                    score = abMin(state, adversary + 1, depth,alpha,maxScore)[0]
-                if score < maxScore:
-                    if score < alpha:
-                        return (maxScore, bestAction)
-                    maxScore, bestAction = score, action
-            return (maxScore, bestAction)
+                    maxScore = min(maxScore,abMin(state, depth, adversary + 1,alpha,beta))
+                if maxScore <= alpha:
+                    return maxScore
+                beta = min(beta,maxScore)
+            return maxScore
 
-        return abMax(gameState, 0)[1]
+        actions = gameState.getLegalActions(0)
+        alpha = -sys.maxint
+        beta = sys.maxint
+        maximum = -sys.maxint
+        maxAction = ''
+        for action in actions:
+            Depth = 0
+            currentMax = abMin(gameState.generateSuccessor(0, action), Depth, 1,alpha, beta)
+            if currentMax > maximum:
+                maximum = currentMax
+                maxAction = action
+        return maxAction
+
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
