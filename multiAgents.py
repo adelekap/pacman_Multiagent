@@ -227,13 +227,13 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 if (adversary == state.getNumAgents() - 1):
                     maxScore = min(maxScore,abMax(newState,depth,alpha,beta))
                 else:
-                    maxScore = min(maxScore,abMin(state, depth, adversary + 1,alpha,beta))
+                    maxScore = min(maxScore,abMin(newState, depth, adversary + 1,alpha,beta))
                 if maxScore <= alpha:
                     return maxScore
                 beta = min(beta,maxScore)
             return maxScore
 
-        actions = gameState.getLegalActions(0)
+        actions = [action for action in gameState.getLegalActions(0) if action != 'Stop']
         alpha = -sys.maxint
         beta = sys.maxint
         maximum = -sys.maxint
