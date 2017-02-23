@@ -296,8 +296,6 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         return bestAction
 
 
-lastPositions = []
-
 def betterEvaluationFunction(currentGameState):
     """
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -347,6 +345,7 @@ def betterEvaluationFunction(currentGameState):
         score += closestGhost * 2
         if closestGhost < 2:
             score -= 30
+    print score
     return score
 
 
