@@ -296,6 +296,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         return bestAction
 
 
+lastPositions = []
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -304,8 +305,49 @@ def betterEvaluationFunction(currentGameState):
 
       DESCRIPTION: <write something here so we know what you did>
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    foodList = currentGameState.getFood().asList()
+    foodLeft = currentGameState.getNumFood()
+    capsules = currentGameState.getCapsules()
+    pacmanPosition = currentGameState.getPacmanPosition()
+    ghostPositions = currentGameState.getGhostPositions()
+    ghostStates = currentGameState.getGhostStates()
+    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
+    currentScore = currentGameState.getScore()
+    possibleActions = currentGameState.getLegalPacmanActions()
+    possibleSuccessors = [currentGameState.generateSuccessor(0,action) for action in possibleActions]
+
+    for time in scaredTimes:
+        if time != 0:
+            capsuleTime = True
+        else:
+            capsuleTime = False
+
+    if currentGameState.isWin():
+        return sys.maxint
+    if currentGameState.isLose() and not capsuleTime:
+        return -sys.maxint
+
+    if foodLeft != 0:
+        currentClosestFood = min([manhattanDistance(pacmanPosition,food) for food in foodList])
+    score = int(((54.0 - foodLeft)/54.0)*1000) - currentClosestFood
+
+    for capsule in capsules:
+        if pacmanPosition == capsule:
+            score += 50
+    closestGhost = min([manhattanDistance(gp, pacmanPosition) for gp in ghostPositions])
+
+
+    if capsuleTime:
+        if closestGhost == 0:
+            score += 200
+        else:
+            score += (1/closestGhost)*190
+    else:
+        score += closestGhost * 2
+        if closestGhost < 2:
+            score -= 30
+    return score
 
 
 # Abbreviation
@@ -326,4 +368,3 @@ class ContestAgent(MultiAgentSearchAgent):
           just make a beeline straight towards Pacman (or away from him if they're scared!)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
