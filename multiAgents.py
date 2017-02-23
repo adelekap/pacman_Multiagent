@@ -120,13 +120,6 @@ class MultiAgentSearchAgent(Agent):
         self.depth = int(depth)
 
 
-class gameNode():
-    def __init__(self, state, cost, action=None):
-        self.State = state
-        self.Cost = cost
-        self.Action = action
-
-
 class MinimaxAgent(MultiAgentSearchAgent):
     """
       Your minimax agent (question 2)
@@ -260,8 +253,48 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           All ghosts should be modeled as choosing uniformly at random from their
           legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def maxValue(state,depth):
+            d = self.depth
+            if state.isWin() or state.isLose() or depth == d:
+                return (self.evaluationFunction(state))
+            depth += 1
+            legalMoves = [action for action in state.getLegalActions(0) if action != 'Stop']
+            maxScore = -sys.maxint
+            for action in legalMoves:
+                newState = state.generateSuccessor(0, action)
+                maxScore = max(maxScore, expValue(newState, depth, 1))
+            return (maxScore)
+
+
+        def expValue(state,depth,adversary):
+            d = self.depth
+            if state.isWin() or state.isLose() or depth == d:
+                return(self.evaluationFunction(state))
+            depth += 1
+            legalMoves = state.getLegalActions(adversary)
+            value = 0
+            for action in legalMoves:
+                newState = state.generateSuccessor(adversary,action)
+                if adversary == state.getNumAgents() - 1:
+                    value += maxValue(newState, depth - 1)
+                else:
+                    value += expValue(newState,depth,adversary+1)
+            return value/len(legalMoves)
+
+
+        if gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+        legalActions = [action for action in gameState.getLegalActions(0) if action != 'Stop']
+        bestAction = ''
+        score = -sys.maxint
+        for action in legalActions:
+            nextState = gameState.generateSuccessor(0, action)
+            prevscore = score
+            score = max(score, expValue(nextState, 1, 1))
+            if score > prevscore:
+                bestAction = action
+        return bestAction
+
 
 
 def betterEvaluationFunction(currentGameState):
