@@ -239,7 +239,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 maxAction = action
         return maxAction
 
-
+class AgentState():
+    def __init__(self,ghostState):
+        self.Position = ghostState.configuration.pos
+        self.Timer = ghostState.scaredTimer
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -293,6 +296,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             score = max(score, expValue(nextState, 1, 1))
             if score > prevscore:
                 bestAction = action
+        if bestAction not in legalActions:
+            return "OOPSIES"
         return bestAction
 
 
@@ -308,33 +313,32 @@ def betterEvaluationFunction(currentGameState):
     foodLeft = currentGameState.getNumFood()
     capsules = currentGameState.getCapsules()
     pacmanPosition = currentGameState.getPacmanPosition()
-    ghostPositions = currentGameState.getGhostPositions()
-    ghostStates = currentGameState.getGhostStates()
-    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
-    currentScore = currentGameState.getScore()
-    possibleActions = currentGameState.getLegalPacmanActions()
-    possibleSuccessors = [currentGameState.generateSuccessor(0,action) for action in possibleActions]
+    ghostStates = {}
+    for ghost in range(1,currentGameState.getNumAgents()):
+        ghostStates[ghost] = AgentState(currentGameState.getGhostState(ghost))
 
-    for time in scaredTimes:
-        if time != 0:
+    closestGhost = min([manhattanDistance(gp.Position, pacmanPosition) for gp in ghostStates.values()])
+
+    for ghost in ghostStates.values():
+        if ghost.Timer != 0:
             capsuleTime = True
         else:
             capsuleTime = False
 
     if currentGameState.isWin():
         return sys.maxint
-    if currentGameState.isLose() and not capsuleTime:
-        return -sys.maxint
+    if currentGameState.isLose():
+        return -sys.maxint + 1
 
     if foodLeft != 0:
         currentClosestFood = min([manhattanDistance(pacmanPosition,food) for food in foodList])
-    score = int(((54.0 - foodLeft)/54.0)*1000) - currentClosestFood
+        score = int(((54.0 - foodLeft)/54.0)*1000) - currentClosestFood
+    else:
+        score = int(((54.0 - foodLeft) / 54.0) * 1000)
 
     for capsule in capsules:
         if pacmanPosition == capsule:
             score += 50
-    closestGhost = min([manhattanDistance(gp, pacmanPosition) for gp in ghostPositions])
-
 
     if capsuleTime:
         if closestGhost == 0:
@@ -345,7 +349,6 @@ def betterEvaluationFunction(currentGameState):
         score += closestGhost * 2
         if closestGhost < 2:
             score -= 30
-    print score
     return score
 
 

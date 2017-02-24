@@ -608,6 +608,10 @@ def replayGame( layout, actions, display ):
 
     display.finish()
 
+Outcomes = []
+
+
+
 def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30 ):
   import __main__
   __main__.__dict__['_display'] = display
@@ -641,10 +645,14 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
     scores = [game.state.getScore() for game in games]
     wins = [game.state.isWin() for game in games]
     winRate = wins.count(True)/ float(len(wins))
+    Outcomes = [game.state.getScore() for game in games if game.state.isWin()]
+    if game.state.isWin():
+      Outcomes.append(game.state.getScore())
     print 'Average Score:', sum(scores) / float(len(scores))
     print 'Scores:       ', ', '.join([str(score) for score in scores])
     print 'Win Rate:      %d/%d (%.2f)' % (wins.count(True), len(wins), winRate)
     print 'Record:       ', ', '.join([ ['Loss', 'Win'][int(w)] for w in wins])
+    print 'Average = {0}'.format(sum(Outcomes)/len(Outcomes))
 
   return games
 
