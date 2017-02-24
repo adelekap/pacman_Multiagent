@@ -240,7 +240,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         return maxAction
 
 class AgentState():
-    def __init__(self,ghostState):
+    def __init__(self,ghostState,agent):
+        self.Agent = agent
         self.Position = ghostState.configuration.pos
         self.Timer = ghostState.scaredTimer
 
@@ -296,59 +297,81 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             score = max(score, expValue(nextState, 1, 1))
             if score > prevscore:
                 bestAction = action
-        if bestAction not in legalActions:
-            return "OOPSIES"
+
         return bestAction
 
 
 def betterEvaluationFunction(currentGameState):
     """
-      Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
-      evaluation function (question 5).
+      This evaluation function uses the food left to be eaten, the location (and absence of) power pellets, pacman's
+      position, and the state of the ghosts to return a value to "score" the given state.
 
-      DESCRIPTION: <write something here so we know what you did>
+      Each section of the evaluation function has comments for more clarification.
+
+      The score is mainly based on the amount of food that is left. Eating food in a state is given a lot of points
+      (to help with the "thrashing" that can occur). Avoiding the ghosts is given a very high priority. The points
+      try to keep pacman at least 1 space away if possible (high penalty for being one space away and max
+      penality for 0 spaces away).
+      Dealing with the power pellet involves a boolean (whether or not it is possible to eat a ghost in this state) and
+      keeps track of the ghost's scared-timers to check if a nearby ghost can be eaten.
     """
 
+    #The necessary information about the current state needed for my evaluation function
     foodList = currentGameState.getFood().asList()
     foodLeft = currentGameState.getNumFood()
     capsules = currentGameState.getCapsules()
     pacmanPosition = currentGameState.getPacmanPosition()
     ghostStates = {}
     for ghost in range(1,currentGameState.getNumAgents()):
-        ghostStates[ghost] = AgentState(currentGameState.getGhostState(ghost))
+        ghostStates[ghost] = AgentState(currentGameState.getGhostState(ghost),ghost)
 
-    closestGhost = min([manhattanDistance(gp.Position, pacmanPosition) for gp in ghostStates.values()])
+    # This finds the closest ghost and keeps track of which agent it is and the estimated distance from pacman
+    ghostDistance = sys.maxint
+    closestGhost = None
+    for ghost in ghostStates.values():
+        distance = manhattanDistance(ghost.Position, pacmanPosition)
+        if distance < ghostDistance:
+            ghostDistance = distance
+            closestGhost = ghost
 
+    #This checks whether or not a ghost can get eaten (pacman has eaten a power pellet)
     for ghost in ghostStates.values():
         if ghost.Timer != 0:
-            capsuleTime = True
+            powerPelletTime = True
         else:
-            capsuleTime = False
+            powerPelletTime = False
 
+    #If the game is win or lost, give this priority accordingly
     if currentGameState.isWin():
         return sys.maxint
     if currentGameState.isLose():
         return -sys.maxint + 1
 
+    #This sets the baseline score based on how much food is left and how close pacman is to the
+    #nearest food
     if foodLeft != 0:
         currentClosestFood = min([manhattanDistance(pacmanPosition,food) for food in foodList])
-        score = int(((54.0 - foodLeft)/54.0)*1000) - currentClosestFood
+        score = abs(int(((54.0 - foodLeft)/54.0)*1000) - currentClosestFood)
     else:
-        score = int(((54.0 - foodLeft) / 54.0) * 1000)
+        score = abs(int(((54.0 - foodLeft) / 54.0) * 1000))
 
     for capsule in capsules:
         if pacmanPosition == capsule:
             score += 50
 
-    if capsuleTime:
-        if closestGhost == 0:
+    # This makes sure pacman doesn't run into a ghost that cant be eaten
+    #If it is a ghost that can be eaten though, this is given high priority
+    if powerPelletTime:
+        if ghostDistance == 0 and closestGhost.Timer != 0:
             score += 200
         else:
-            score += (1/closestGhost)*190
+            score += (1/ghostDistance)*190
     else:
-        score += closestGhost * 2
-        if closestGhost < 2:
-            score -= 30
+        score += ghostDistance * 2
+        if ghostDistance < 2:
+            score -= ghostDistance * 2
+
+
     return score
 
 
