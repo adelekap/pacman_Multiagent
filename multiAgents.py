@@ -69,19 +69,23 @@ class ReflexAgent(Agent):
         closestFoodDist = 1000
         foodLeft = len(foodList)
 
+        #Get more points if close to a food
         for food in foodList:
             dist = util.manhattanDistance(newPos, food)
             if dist < closestFoodDist:
                 closestFoodDist = dist
         score = -2 * closestFoodDist
 
+        #Get moore points if far away from a ghost
         distFromGhost = util.manhattanDistance(ghostPosition, newPos)
         score += (distFromGhost)
 
+        #Get more points for the number of food left to be eaten
         if newPos in foodList:
             foodLeft -= 1
         score - (3 * foodLeft)
 
+        #Penalizes times when close to a ghost
         if distFromGhost <= 2:
             score -= 20
 
